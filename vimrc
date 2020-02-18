@@ -130,7 +130,6 @@ let g:lsp_fold_enabled = 0
 let g:termdebug_wide=1
 noremap <F12> :vertical resize +5<CR>
 noremap <F11> :vertical resize -5<CR> 
-noremap <F9> :Termdebug dist/bin/nuodb<CR>
 noremap <F5> :Step<CR>
 noremap <F6> :Over<CR>
 noremap <C-b> :Break<CR>
