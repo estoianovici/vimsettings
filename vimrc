@@ -5,37 +5,28 @@ set nocompatible
 call plug#begin('~/.vim/plugged')
 Plug 'vim-scripts/mru.vim'
 Plug 'drmikehenry/vim-fontsize'
-Plug 'arzg/vim-substrata'
 Plug 'liuchengxu/vim-clap'
 
 " Colors 
-Plug 'arzg/vim-colors-xcode'
-Plug 'rafi/awesome-vim-colorschemes' 
-Plug 'endel/vim-github-colorscheme'
 Plug 'altercation/vim-colors-solarized'
+Plug 'arzg/vim-colors-xcode'
 Plug 'chriskempson/base16-vim'
+Plug 'endel/vim-github-colorscheme'
+Plug 'rafi/awesome-vim-colorschemes' 
 
 " Dev
 Plug 'scrooloose/nerdtree'
-Plug 'Shougo/unite.vim'
 Plug 'tpope/vim-fugitive'
 Plug 'rhysd/vim-clang-format'
-Plug 'vim-scripts/L9'
-Plug 'vim-scripts/FuzzyFinder'
 Plug 'justinmk/vim-syntax-extra'
-
-" lsp
 Plug 'natebosch/vim-lsc'
 
 call plug#end()
 
 " misc visual stuff
 set background=dark
-" set termguicolors
-" colorscheme base16-solarized-dark
 
 set backspace=eol,start
-set formatoptions=tcql
 set visualbell
 set sidescrolloff=0
 set number
@@ -85,25 +76,30 @@ endif
 " Find files recursively
 set path=$PWD/**
 
+" Override leader to be ','
 let mapleader = ","
-
-" neocomplete <TAB>: completion.
-inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 
 " disable scratch window
 set completeopt=menu,popup
 
-" clang format
+" Clang format. Use ,cf in normal mode to format either the selection of the
+" entire file.
 autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :<C-u>ClangFormat<CR>
 autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>"
 nmap <Leader>C :ClangFormatAutoToggle<CR>
 
+" set autocomplete for c, h, cpp files
 autocmd FileType c,h,cpp setlocal omnifunc=lsp:complete
 
+" Set this to 1 if your project is small enough. It might be a big performance
+" issue otherwise
 let g:lsp_async_completion=0
+
+" Load the termdebug plugin which allows gdb debugging
 packadd termdebug
 
-" Register ccls C++ lanuage server.
+" Register ccls C++ lanuage server. The compile_comands.json file must be in
+" the current vim folder. The ccls database goes into /tmp/ccls/cache
 if executable('ccls')
     let g:lsc_server_commands = {
     \ 'cpp': {
@@ -120,14 +116,17 @@ if executable('ccls')
 endif
 let g:lsc_enable_autocomplete = v:true
 let g:lsc_auto_map = v:true
+" Disable highlights because it's buggy and highlights the wrong things
 let g:lsc_reference_highlights = v:false 
 
+" disable floding because it's slightly buggy
 set foldmethod=expr
   \ foldexpr=lsp#ui#vim#folding#foldexpr()
   \ foldtext=lsp#ui#vim#folding#foldtext()
 let g:lsp_fold_enabled = 0
 
-" Termdebug
+" Termdebug helpers. Make the layout vertical and map some keys for stepping,
+" breaking, etc
 let g:termdebug_wide=1
 noremap <F12> :vertical resize +5<CR>
 noremap <F11> :vertical resize -5<CR> 
@@ -146,5 +145,24 @@ noremap <Leader>gI :LSClientFindImplementations<cr>
 noremap <Leader>gh :LSClientSignatureHelp<cr>
 noremap <Leader>gs :LSClientWorkspaceSymbol<cr>
 
-" Clap shortcuts
+" Clap shortcuts. Press F3 to start searching
 noremap <F3> :Clap files<CR>
+
+function! StripString(input_string)
+    return substitute(a:input_string, '^\s*\(.\{-}\)\s*$', '\1', '')
+endfunction
+
+" search in files. This method searches for a pattern in all h/cpp files
+" in the current path
+function SearchText()
+  let curline = getline('.')
+  call inputsave()
+  let pattern = StripString(input('Enter text: '))
+  call inputrestore()
+  let cmd = "noautocmd vim \"".l:pattern."\" **/*.cpp **/*.h"
+  exec l:cmd
+  cwindow
+endfunction
+
+" search in files
+noremap <F4> :call SearchText() <CR>
